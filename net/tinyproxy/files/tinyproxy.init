@@ -71,6 +71,11 @@ start_proxy() {
 	proxy_list "$1" ConnectPort >> $CFGFILE
 
 	config_foreach write_upstream upstream
+	
+	proxy_flag "$1" ReverseOnly Yes No >> $CFGFILE
+	proxy_flag "$1" ReverseMagic Yes No >> $CFGFILE
+	proxy_string "$1" ReverseBaseURL >> $CFGFILE
+	config_foreach write_reversepath ReversePath
 
 	service_start /usr/sbin/tinyproxy -c "$CFGFILE"
 }
@@ -91,6 +96,17 @@ write_upstream() {
 	[ "$type" == "reject" -a -n "$target" ] && \
 		echo "no upstream$target" >> $CFGFILE
 }
+
+write_reversepath() {
+	local path
+	local target
+
+	config_get path "$1" path
+	config_get target "$1" target
+
+	echo "ReversePath $path $target" >> $CFGFILE
+}
+
 
 proxy_atom() {
 	local SECTION=$1
